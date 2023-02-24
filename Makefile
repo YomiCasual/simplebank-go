@@ -7,5 +7,10 @@ migratedown:
 sqlc: 
 	sqlc generate
 
+runtest:
+	cd db/sqlc/test && go test .
 
-.PHONY: migrateup migratedown sqlc
+test:
+	go test -v -cover ./...
+
+.PHONY: migrateup migratedown sqlc runtest test
