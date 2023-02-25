@@ -13,7 +13,6 @@ runtest:
 test:
 	go test -v -cover ./...
 
-server:
-	go run main.go
+
 
 .PHONY: migrateup migratedown sqlc runtest test server

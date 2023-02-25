@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,9 +16,19 @@ func HandleGinErrorWithStaus(ctx *gin.Context,status int,  err error)  {
 }
 
 func ErrorResponse(err error) gin.H {
-	return gin.H{"error": err.Error()}
+	return gin.H{ "success": false, "error": err.Error()}
 }
 
 func HasError(err error) bool {
 	return err != nil
+}
+func IsSqlNotFounderror(err error) bool {
+	return err != sql.ErrNoRows
+}
+
+func HandleGinSuccess(ctx *gin.Context, response interface{})  {
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": response,
+		"success": true,
+	})
 }

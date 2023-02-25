@@ -78,7 +78,7 @@ func TestListAccount(t *testing.T) {
 	 createAccount(t)
 
 	
-	 accounts, err := testQueries.ListAccounts(context.Background())
+	 accounts, err := testQueries.ListAccounts(context.Background(), sqlc.ListAccountsParams{})
 
 	 require.NoError(t, err)
 

@@ -9,23 +9,24 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://user:password@localhost:5432/simplebank?sslmode=disable"
-)
+
 
 func main() {
 
+	config, _ := lib.LoadConfig(".");
+
+
+	
 
 	var err error
 
-	conn, err := sql.Open(dbDriver, dbSource)
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 
 	lib.HandleError(err);
 	
 	server := api.NewServer(sqlc.NewStore(conn))
 
-	err = server.Start("8080")
+	err = server.Start(config.ServerAddress)
 
 	lib.HandleError(err)
 

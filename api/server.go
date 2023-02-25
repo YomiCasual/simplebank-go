@@ -19,9 +19,17 @@ func NewServer(store *sqlc.Store) *Server {
 	router := gin.Default()
 
 	//routes
-	//Accounts
 
-	router.POST("/accounts", server.createAccount )
+	//Accounts
+	accounts := router.Group("/accounts")
+	{
+		accounts.GET("/", server.listAccounts )
+		accounts.POST("/", server.createAccount )
+		accounts.PATCH("/:id", server.updateAccount)
+		accounts.GET("/:id", server.getAccount)
+		accounts.DELETE("/:id", server.deleteAccount)
+	}
+
 
 	server.router = router
 
@@ -30,7 +38,7 @@ func NewServer(store *sqlc.Store) *Server {
 
 
 func (server *Server) Start(address string) error {
-	return server.router.Run("localhost:" + address)
+	return server.router.Run(address)
 }
 
 
