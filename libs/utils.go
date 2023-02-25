@@ -12,7 +12,7 @@ const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func HandleError(err error) {
 	if (err != nil) {
-		log.Fatal("Logging error: ",err)
+		log.Fatal("Logging error: ",err.Error())
 	}
 }
 
