@@ -22,7 +22,6 @@ func TestGetAccount(t *testing.T) {
 	
 	userAccount, err := testQueries.GetAccount(context.Background(), account.ID)
 
-	lib.HandleError(err)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, userAccount)
@@ -98,7 +97,6 @@ func createAccount(t *testing.T) (sqlc.Account, sqlc.CreateAccountParams, error 
 	}
 	account, err := testQueries.CreateAccount(context.Background(), arg)
 
-	lib.HandleError(err)
 
 
 	require.NoError(t, err)

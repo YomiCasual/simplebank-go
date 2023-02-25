@@ -17,13 +17,18 @@ const (
 
 var testQueries *sqlc.Queries
 
+var testDb *sql.DB
+
 
 func TestMain(m *testing.M) {
-	conn, err := sql.Open(dbDriver, dbSource)
+
+	var err error
+
+	testDb, err = sql.Open(dbDriver, dbSource)
 
 	lib.HandleError(err);
 
-	testQueries = sqlc.New(conn)
+	testQueries = sqlc.New(testDb)
 
 	os.Exit(m.Run()) 
 

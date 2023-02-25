@@ -12,7 +12,7 @@ const alphabet = "abcdefghijklmnopqrstuvwxyz"
 
 func HandleError(err error) {
 	if (err != nil) {
-		log.Fatal("Cannot connect to database",err)
+		log.Fatal("Logging error: ",err)
 	}
 }
 
