@@ -14,6 +14,9 @@ func HandleGinError(ctx *gin.Context, err error)  {
 func HandleGinErrorWithStaus(ctx *gin.Context,status int,  err error)  {
 	 ctx.JSON(status, ErrorResponse(err))
 }
+func HandleGinErrorWithStatusAndMessage(ctx *gin.Context,status int,  message string)  {
+	 ctx.JSON(status, gin.H{"success": false, "message": message})
+}
 
 func ErrorResponse(err error) gin.H {
 	return gin.H{ "success": false, "error": err.Error()}

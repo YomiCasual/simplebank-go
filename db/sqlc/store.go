@@ -3,6 +3,7 @@ package sqlc
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -29,15 +30,18 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 	if err != nil {
 		return err
 	}
-
+	
 	q := New(tx)
 	
 	err = fn(q)
-
+	
 	if (err != nil) {
+	
 		if rbEr := tx.Rollback(); rbEr != nil {
 			return fmt.Errorf("tx err: %v, rb err: %v", err, rbEr)
 		}
+
+		return err
 	}
 
 	return tx.Commit()
@@ -51,6 +55,11 @@ type TransferTxParams struct {
 	FromAccountID int64 `json:"from_account_id"`
 	ToAccountID int64 `json:"to_account_id"`
 	Amount int64 `json:"amount"`
+}
+type HasMatchingCurrencyParams struct {
+	FromAccountID int64 `json:"from_account_id"`
+	ToAccountID int64 `json:"to_account_id"`
+	Currency    string `json:"currency" binding:"required,currency" `
 }
 type TransferTxResult struct {
 	Transfer Transfer `json:"transfer"`
@@ -124,4 +133,38 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 	} )
 
 	return result, err
+}
+
+func (store *Store) HasMatchingCurrency(ctx context.Context, arg HasMatchingCurrencyParams) (bool, error) {
+
+
+ 	hasMatchingAccount := false
+	 
+	 err := store.execTx(ctx, func(q *Queries) error {
+
+
+		account1, err := q.GetAccount(ctx, arg.FromAccountID)
+
+		if (err != nil) {
+			err = errors.New("cannot get account with from_account_id")
+			  return err
+		}
+
+		account2, err := q.GetAccount(ctx, arg.ToAccountID)
+
+		if (err != nil) {
+			err = errors.New("cannot get account with to_account_id")
+			return err
+		}
+
+		if account1.Currency != account2.Currency || account1.Currency != arg.Currency {
+			err := fmt.Errorf("currency mismatch of account1 [%v] and account 2 [%v] and transfer currency [%v]", account1.Currency, account2.Currency, arg.Currency)
+			return err
+		}
+
+		return err
+	} )
+
+
+	return hasMatchingAccount, err
 }

@@ -13,11 +13,13 @@ import (
 
 type createAccountRequst struct {
 	Owner    string `json:"owner" binding:"required" `
-	Currency string `json:"currency" binding:"required,oneof=EUR USD CAD"`
+	Currency string `json:"currency" binding:"required,currency"`
 }
 type updateAccountRequest struct {
-	ID    int64 `uri:"id" binding:"required,min=1"`
 	Amount    int64 `json:"amount" binding:"required"`
+}
+type updateAccountRequestUri struct {
+	ID    int64 `uri:"id" binding:"required,min=1"`
 }
 type listAccountsRequest struct {
 	Page    int32 `form:"page" binding:"min=1"`
@@ -84,22 +86,24 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 }
 func (server *Server) updateAccount(ctx *gin.Context) {
 
-	var req updateAccountRequest
+	var reqUri updateAccountRequestUri
 
-	if err := ctx.ShouldBindUri(&req.ID); err !=nil {
+	var reqBody updateAccountRequest
+
+	if err := ctx.ShouldBindUri(&reqUri); err !=nil {
 		lib.HandleGinError(ctx, err)
 		return 
 	}
 
 
-	if err := ctx.ShouldBindJSON(&req.Amount); err !=nil {
+	if err := ctx.ShouldBindJSON(&reqBody); err !=nil {
 		lib.HandleGinError(ctx, err)
 		return 
 	}
 
 	arg := sqlc.UpdateAccountBalanceParams{
-		Amount: req.Amount,
-		ID: req.ID,
+		Amount: reqBody.Amount,
+		ID: reqUri.ID,
 	}
 
 	account, err := server.store.UpdateAccountBalance(context.Background(), arg)

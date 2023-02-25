@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 
 	var err error
 
-	testDb, err = sql.Open(config.DBDriver, config.DBSource)
+	testDb, err = sql.Open(config.DBDriver, config.TestDBSource)
 
 	lib.HandleError(err);
 

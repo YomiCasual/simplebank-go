@@ -4,6 +4,8 @@ import (
 	"simplebank/db/sqlc"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 
@@ -18,6 +20,10 @@ func NewServer(store *sqlc.Store) *Server {
 
 	router := gin.Default()
 
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("currency", validCurrency)
+	}
+
 	//routes
 
 	//Accounts
@@ -28,6 +34,12 @@ func NewServer(store *sqlc.Store) *Server {
 		accounts.PATCH("/:id", server.updateAccount)
 		accounts.GET("/:id", server.getAccount)
 		accounts.DELETE("/:id", server.deleteAccount)
+	}
+
+	//Accounts
+	transfer := router.Group("/transfer")
+	{
+		transfer.POST("/", server.transferAmount )
 	}
 
 
