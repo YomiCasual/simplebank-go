@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"simplebank/db/sqlc"
 	lib "simplebank/libs"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,10 +14,18 @@ import (
 
 
 type createUserRequest struct {
-	Username    string `json:"owner" binding:"required" `
-	Password string `json:"password" binding:"required"`
+	Username    string `json:"username" binding:"required,alphanum" `
+	Password string `json:"password" binding:"required,min=6"`
 	FullName string `json:"full_name" binding:"required"`
-	Email string `json:"email" binding:"required"`
+	Email string `json:"email" binding:"required,email"`
+}
+type UserResponse struct {
+	ID                int64     `json:"id"`
+	Username          string    `json:"username"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	CreatedAt         time.Time `json:"createdAt"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
 }
 
 type listUserRequest struct {
@@ -36,9 +45,17 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return 
 	}
 
+
+	hashed_password, err := lib.PasswordCrypt().HashPassword(req.Password);
+
+	if lib.HasError(err) {
+		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
 	arg := sqlc.CreateUserParams{
 	Username: req.Username,
-	HashedPassword: req.Password,
+	HashedPassword: hashed_password,
 	FullName: req.FullName,
 	Email: req.Email,
 	}
@@ -46,12 +63,23 @@ func (server *Server) createUser(ctx *gin.Context) {
 
 	user, err := server.store.CreateUser(context.Background(), arg)
 
+
+	
 	if lib.HasError(err) {
-		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
-		return 
+		lib.HandleAllErrors(ctx, err,  "User with this details exist")
+		return
+	}
+	
+	newUser := UserResponse{
+		Username: user.Username,
+		ID: user.ID,
+		Email: user.Email,
+		CreatedAt: user.CreatedAt,
+		FullName: user.FullName,
+		PasswordChangedAt: user.PasswordChangedAt,
 	}
 
-	lib.HandleGinSuccess(ctx, user)
+	lib.HandleGinSuccess(ctx, newUser)
 }
 
 func (server *Server) listUsers(ctx *gin.Context) {
@@ -59,9 +87,13 @@ func (server *Server) listUsers(ctx *gin.Context) {
 
 	var params listUserRequest;
 
-	if err := ctx.ShouldBindQuery(&params); err != nil {
-		lib.HandleGinError(ctx, err)
-		return 
+	
+	if err := ctx.BindQuery(&params); err != nil {
+
+		if params.Page == 0 || params.PageSize == 0 {
+			params.Page = 1
+			params.PageSize = 5
+		}
 	}
 
 	arg := sqlc.ListUsersParams{
@@ -75,6 +107,7 @@ func (server *Server) listUsers(ctx *gin.Context) {
 		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
 		return 
 	}
+
 
 	lib.HandleGinSuccess(ctx, users)
 

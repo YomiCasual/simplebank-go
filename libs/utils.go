@@ -69,11 +69,15 @@ func RandomCurrency() string {
 	return currencies[rand.Intn(k)]
 
 }
+func RandomEmail() string {
+	return RandomString(10) + "@email.com"
+
+}
 
 
 
 func CreatePagination[T PaginationInterface](pageSize T, page T) *Pagination[T] {
-	
+
 	return &Pagination[T]{
 			Limit: pageSize,
 			Offset: pageSize,

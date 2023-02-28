@@ -18,6 +18,7 @@ type Server struct {
 func NewServer(store *sqlc.Store) *Server {
 	server := &Server{ store: store }
 
+
 	router := gin.Default()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
@@ -40,6 +41,14 @@ func NewServer(store *sqlc.Store) *Server {
 	transfer := router.Group("/transfer")
 	{
 		transfer.POST("/", server.transferAmount )
+	}
+
+
+	//Users
+	user := router.Group("/users")
+	{
+		user.POST("/", server.createUser )
+		user.GET("/", server.listUsers )
 	}
 
 

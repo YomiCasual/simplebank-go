@@ -49,10 +49,8 @@ func (server *Server) createAccount(ctx *gin.Context) {
 
 	account, err := server.store.CreateAccount(context.Background(), arg)
 
-	if lib.HasError(err) {
-		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
-		return 
-	}
+
+	lib.HandleAllErrors(ctx, err,  "Error")
 
 	 ctx.JSON(http.StatusOK, account)
 
