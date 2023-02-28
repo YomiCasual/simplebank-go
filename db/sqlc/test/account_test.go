@@ -94,8 +94,11 @@ func TestListAccount(t *testing.T) {
 
 
 func createAccount(t *testing.T) (sqlc.Account, sqlc.CreateAccountParams, error ) {
+
+	createdUser, _, _ := CreateUser(t)
+
 	arg := sqlc.CreateAccountParams{
-		Owner: lib.RandomOwner(),
+		Owner: createdUser.Username,
 		Balance: lib.RandomMoney(),
 		Currency: lib.RandomCurrency(),
 	}

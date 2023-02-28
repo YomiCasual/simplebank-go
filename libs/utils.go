@@ -5,7 +5,22 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"golang.org/x/exp/constraints"
 )
+
+
+
+
+type PaginationInterface interface {
+	constraints.Signed
+}
+
+
+type Pagination[T PaginationInterface] struct {
+	Limit T
+	Offset T
+}
 
 
 const alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -53,4 +68,14 @@ func RandomCurrency() string {
 
 	return currencies[rand.Intn(k)]
 
+}
+
+
+
+func CreatePagination[T PaginationInterface](pageSize T, page T) *Pagination[T] {
+	
+	return &Pagination[T]{
+			Limit: pageSize,
+			Offset: pageSize,
+	}
 }

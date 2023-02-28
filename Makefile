@@ -26,10 +26,14 @@ test:
 	go test -v -cover ./...
 
 MIGRATION_NAME ?= $(shell bash -c 'read -p "MigrationName: " name; echo $$name')
+DB_NAME ?= $(shell bash -c 'read -p "DbName: " name; echo $$name')
 
 gmigration:
 	migrate create -ext sql -dir db/migration -seq $(MIGRATION_NAME)
 
+dockerup:
+	docker compose up $(DB_NAME)
 
 
-.PHONY: migrateup migratedown sqlc runtest test server migrateuptest migratedowntest gmigration migratedown1 migrateup1
+
+.PHONY: migrateup migratedown sqlc runtest test server migrateuptest migratedowntest gmigration migratedown1 migrateup1 dockerup
