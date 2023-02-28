@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"simplebank/db/sqlc"
 	lib "simplebank/libs"
 	"testing"
@@ -78,11 +79,14 @@ func TestListAccount(t *testing.T) {
 	 createAccount(t)
 
 	
-	 accounts, err := testQueries.ListAccounts(context.Background(), sqlc.ListAccountsParams{})
+	 accounts, err := testQueries.ListAccounts(context.Background(), sqlc.ListAccountsParams{
+		Limit: 5,
+		Offset: 0,
+	 })
 
 	 require.NoError(t, err)
 
-
+	fmt.Println("accounts", accounts)
 	require.NoError(t, err)
 	require.NotEmpty(t, accounts)
 

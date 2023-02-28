@@ -21,8 +21,8 @@ func TestTransferTx(t *testing.T) {
 	n := 3;
 	amount := int64(10)
 
-	errs := make(chan error)
-	results := make(chan sqlc.TransferTxResult)
+	errs := make(chan error, n)
+	results := make(chan sqlc.TransferTxResult, n)
 
 	for i:=0; i < n;i++ {
 		go func ()  {
@@ -38,14 +38,20 @@ func TestTransferTx(t *testing.T) {
 		}()
 	}
 
+
+	// close(errs)
+	// close(results)
+
 	// check results
 	existed := make(map[int]bool)
 
-	for i:=0; i < n;i++ {
+	for i:=0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
 
 		result := <-results
+
+
 		require.NotEmpty(t, result)
 
 		// check transfer
@@ -105,6 +111,7 @@ func TestTransferTx(t *testing.T) {
 		existed[k] = true
 
 	}
+
 
 
 	// check the final updated balance
