@@ -71,6 +71,7 @@ func NewServer( config lib.Config, store *sqlc.Store) (*Server, error) {
 
 func (server *Server) accountRoutes(router *gin.RouterGroup)  {
 	accounts := router.Group("/accounts")
+	accounts.Use(server.authMiddleware())
 	{
 		accounts.GET("/", server.listAccounts )
 		accounts.POST("/", server.createAccount )
@@ -83,12 +84,12 @@ func (server *Server) accountRoutes(router *gin.RouterGroup)  {
 func (server *Server) userRoutes(router *gin.RouterGroup)  {
 	user := router.Group("/users")
 	{
+		user.GET("/",  server.authMiddleware(), server.listUsers )
 		user.POST("/", server.createUser )
-		user.GET("/", server.listUsers )
 	}
 }
 
-func (server *Server) transferRoutes(router *gin.RouterGroup)  {
+func (server *Server) authRoutes(router *gin.RouterGroup)  {
 	//Users
 	auth := router.Group("/auth")
 	{
@@ -96,8 +97,9 @@ func (server *Server) transferRoutes(router *gin.RouterGroup)  {
 	}
 }
 
-func (server *Server) authRoutes(router *gin.RouterGroup)  {
+func (server *Server) transferRoutes(router *gin.RouterGroup)  {
 	transfer := router.Group("/transfer")
+	transfer.Use(server.authMiddleware())
 	{
 		transfer.POST("/", server.transferAmount )
 	}

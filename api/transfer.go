@@ -11,7 +11,7 @@ import (
 )
 
 type transferRequest struct {
-	FromAccountID    int64 `json:"from_account_id" binding:"required,min=1" `
+	// FromAccountID    int64 `json:"from_account_id" binding:"required,min=1" `
 	ToAccountID    int64 `json:"to_account_id" binding:"required,min=1" `
 	Amount    int64 `json:"amount" binding:"required,gt=0" `
 	Currency    string `json:"currency" binding:"required,currency" `
@@ -29,10 +29,16 @@ func (server *Server) transferAmount(ctx *gin.Context) {
 		return 
 	}
 
+	authUser, err := server.AuthUser(ctx)
+
+	if lib.HasError(err) {
+		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
+		return 
+	}
 
 	
 	arg := sqlc.TransferTxParams{
-		FromAccountID: req.FromAccountID,
+		FromAccountID: int64(authUser.UserId),
 		ToAccountID: req.ToAccountID,
 		Amount: req.Amount,
 		

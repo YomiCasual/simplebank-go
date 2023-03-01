@@ -43,6 +43,7 @@ func HandleGinSuccess(ctx *gin.Context, response interface{})  {
 func HandleAllErrors(ctx *gin.Context, err error,  message string) {
 
 		pqErr, ok := err.(*pq.Error)
+
 		
 		if (ok) {
 			switch pqErr.Code.Name() {
@@ -52,7 +53,6 @@ func HandleAllErrors(ctx *gin.Context, err error,  message string) {
 				case "unique_violation": 
 				HandleGinErrorWithStatusAndMessageWithError(ctx, http.StatusInternalServerError, err, message);
 				return
-
 			}
 		}
 

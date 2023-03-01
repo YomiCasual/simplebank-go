@@ -12,7 +12,6 @@ ORDER BY id
 LIMIT $1
 OFFSET $2;
 
-
 -- name: GetUser :one
 SELECT * FROM users
 WHERE id = $1 LIMIT 1;

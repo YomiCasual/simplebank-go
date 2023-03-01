@@ -12,7 +12,6 @@ import (
 
 
 type createAccountRequst struct {
-	Owner    string `json:"owner" binding:"required" `
 	Currency string `json:"currency" binding:"required,currency"`
 }
 type updateAccountRequest struct {
@@ -44,40 +43,55 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return 
 	}
 
-	arg := sqlc.CreateAccountParams{Balance: 0, Owner: req.Owner, Currency: req.Currency}
+	authUser, err := server.AuthUser(ctx)
+
+	if lib.HasError(err) {
+			lib.HandleGinErrorWithStatusAndMessage(ctx, http.StatusBadRequest, err.Error())
+			return
+	}
+
+	arg := sqlc.CreateAccountParams{Balance: 0, Owner: authUser.Username, Currency: req.Currency}
 
 
 	account, err := server.store.CreateAccount(context.Background(), arg)
 
+	if lib.HasError(err) {
+		lib.HandleAllErrors(ctx, err,  "User already has an account with this currency")
+		return
+	}
 
-	lib.HandleAllErrors(ctx, err,  "Error")
 
 	 ctx.JSON(http.StatusOK, account)
-
 }
+
+
 func (server *Server) listAccounts(ctx *gin.Context) {
 
 
 	var params listAccountsRequest;
 
 	if err := ctx.ShouldBindQuery(&params); err != nil {
-		lib.HandleGinError(ctx, err)
-		return 
+		if params.Page == 0 || params.PageSize == 0 {
+			params.Page = 1
+			params.PageSize = 5
+		}
 	}
-
+	
+	
+	authUser, err := server.AuthUser(ctx)
+	
 	arg := sqlc.ListAccountsParams{
+		Owner: authUser.Username,
 		Limit: params.PageSize,
 		Offset: (params.Page - 1) * params.PageSize,
 	}
-
-
+	
 	accounts, err := server.store.ListAccounts(context.Background(), arg)
 
 	if lib.HasError(err) {
 		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
 		return 
 	}
-
 
 	lib.HandleGinSuccess(ctx, accounts)
 

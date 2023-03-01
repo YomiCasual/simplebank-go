@@ -76,10 +76,4 @@ func RandomEmail() string {
 
 
 
-func CreatePagination[T PaginationInterface](pageSize T, page T) *Pagination[T] {
 
-	return &Pagination[T]{
-			Limit: pageSize,
-			Offset: pageSize,
-	}
-}

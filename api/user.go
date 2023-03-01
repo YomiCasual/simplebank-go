@@ -99,11 +99,9 @@ func (server *Server) createUser(ctx *gin.Context) {
 
 func (server *Server) listUsers(ctx *gin.Context) {
 
-
 	var params listUserRequest;
 
-	
-	if err := ctx.BindQuery(&params); err != nil {
+	if err := ctx.ShouldBindQuery(&params); err != nil {
 
 		if params.Page == 0 || params.PageSize == 0 {
 			params.Page = 1
@@ -123,11 +121,8 @@ func (server *Server) listUsers(ctx *gin.Context) {
 		return 
 	}
 
-
 	lib.HandleGinSuccess(ctx, users)
-
 }
-
 
 
 func (server *Server) loginUser(ctx *gin.Context) {
