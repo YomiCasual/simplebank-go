@@ -141,7 +141,18 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		return 
 	}
 
+	authUser, err := server.AuthUser(ctx)
+
+
+
 	account, err := server.store.GetAccount(context.Background(), req.ID)
+
+	isNotAccountOwner := authUser.Username != account.Owner
+
+	if isNotAccountOwner {
+		lib.HandleGinErrorWithStatusAndMessage(ctx, http.StatusUnauthorized, "You don't have permission")
+		return
+	}
 
 	if lib.HasError(err) {
 		if lib.IsSqlNotFounderror(err) {

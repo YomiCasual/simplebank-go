@@ -61,6 +61,12 @@ type HasMatchingCurrencyParams struct {
 	ToAccountID int64 `json:"to_account_id"`
 	Currency    string `json:"currency" binding:"required,currency" `
 }
+type IsOwnerAccountParams struct {
+	FromAccountID int64 `json:"from_account_id"`
+	AuthUserUsername string `json:"auth_user_username"`
+}
+
+
 type TransferTxResult struct {
 	Transfer Transfer `json:"transfer"`
 	FromAccount Account `json:"from_acount"`
@@ -114,7 +120,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		})
 
 		if (err != nil) {
-			return err
+			return errors.New("insufficent balance")
 		}
 
 
@@ -168,3 +174,26 @@ func (store *Store) HasMatchingCurrency(ctx context.Context, arg HasMatchingCurr
 
 	return hasMatchingAccount, err
 }
+
+
+// func (store *Store) IsOwnerAccount(ctx context.Context, arg IsOwnerAccountParams) (bool, error) {
+
+
+//  	isOwnerAccount := false
+	 
+// 	account, err := store.GetAccount(ctx, arg.FromAccountID);
+
+// 	if lib.HasError(err) {
+// 		accountError := fmt.Errorf("error getting account with id : %v", arg.FromAccountID)
+// 		return isOwnerAccount, accountError
+// 	}
+
+// 	if account.Owner != arg.AuthUserUsername {
+// 		accountError := fmt.Errorf("You don't have permission  to send from this account: %v", arg.FromAccountID)
+// 		return isOwnerAccount, accountError
+// 	}
+	
+
+// 	return hasMatchingAccount, err
+// }
+

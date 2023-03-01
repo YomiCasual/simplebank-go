@@ -18,6 +18,11 @@ OFFSET $3;
 SELECT * FROM accounts
 WHERE id = $1 LIMIT 1;
 
+
+-- name: GetAccountByCurrency :one
+SELECT * FROM accounts
+WHERE owner = $1 AND currency = $2  LIMIT 1;
+
 -- name: GetAccountForUpdate :one
 SELECT * FROM accounts
 WHERE id = $1 LIMIT 1

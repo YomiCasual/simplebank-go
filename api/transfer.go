@@ -11,7 +11,6 @@ import (
 )
 
 type transferRequest struct {
-	// FromAccountID    int64 `json:"from_account_id" binding:"required,min=1" `
 	ToAccountID    int64 `json:"to_account_id" binding:"required,min=1" `
 	Amount    int64 `json:"amount" binding:"required,gt=0" `
 	Currency    string `json:"currency" binding:"required,currency" `
@@ -20,9 +19,7 @@ type transferRequest struct {
 
 func (server *Server) transferAmount(ctx *gin.Context) {
 
-
 	var req transferRequest
-
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		lib.HandleGinError(ctx, err)
@@ -36,9 +33,21 @@ func (server *Server) transferAmount(ctx *gin.Context) {
 		return 
 	}
 
+	accountWithCurrencyArg := sqlc.GetAccountByCurrencyParams{
+		Owner: authUser.Username,
+		Currency: req.Currency,
+	}
+
+
+	userAccountWithCurrency, err := server.store.GetAccountByCurrency(ctx,accountWithCurrencyArg )	
+
+	if lib.HasError(err) {
+		lib.HandleGinErrorWithStatusAndMessage(ctx, http.StatusNotFound, "Error getting user account with this currency: " + req.Currency )
+		return
+	}
 	
 	arg := sqlc.TransferTxParams{
-		FromAccountID: int64(authUser.UserId),
+		FromAccountID: userAccountWithCurrency.ID,
 		ToAccountID: req.ToAccountID,
 		Amount: req.Amount,
 		

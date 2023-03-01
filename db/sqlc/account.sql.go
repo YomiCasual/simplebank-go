@@ -65,6 +65,29 @@ func (q *Queries) GetAccount(ctx context.Context, id int64) (Account, error) {
 	return i, err
 }
 
+const getAccountByCurrency = `-- name: GetAccountByCurrency :one
+SELECT id, owner, balance, currency, "createdAt" FROM accounts
+WHERE owner = $1 AND currency = $2  LIMIT 1
+`
+
+type GetAccountByCurrencyParams struct {
+	Owner    string `json:"owner"`
+	Currency string `json:"currency"`
+}
+
+func (q *Queries) GetAccountByCurrency(ctx context.Context, arg GetAccountByCurrencyParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, getAccountByCurrency, arg.Owner, arg.Currency)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Balance,
+		&i.Currency,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getAccountForUpdate = `-- name: GetAccountForUpdate :one
 SELECT id, owner, balance, currency, "createdAt" FROM accounts
 WHERE id = $1 LIMIT 1
