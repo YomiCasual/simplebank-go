@@ -1,7 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"simplebank/db/sqlc"
+	lib "simplebank/libs"
+	"simplebank/token"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -9,14 +12,39 @@ import (
 )
 
 
+type TokenSelectorReturnType interface {
+	map[string]token.Maker[int32]
+}
+
 type Server struct {
+	config lib.Config
 	store *sqlc.Store
+	tokenMaker token.Maker[int32]
 	router *gin.Engine
 }
 
+//   func TokenSelector[T TokenSelectorReturnType](secretKey string) T {
 
-func NewServer(store *sqlc.Store) *Server {
-	server := &Server{ store: store }
+// 	paseToMaker, _ := token.NewPasetoMaker
+
+// 	return  T{
+// 		"paseto": paseToMaker,
+// 		"jwt": token.NewJWTMaker(secretKey),
+// 	}
+// }
+
+
+
+func NewServer( config lib.Config, store *sqlc.Store) (*Server, error) {
+
+
+	tokenMaker, err := token.NewJWTMaker(config.SymmetricKey)
+
+	if lib.HasError(err) {
+		return nil, fmt.Errorf("cannot create token maker %d", err)
+	}
+
+	server := &Server{ config: config,  store: store, tokenMaker: tokenMaker }
 
 
 	router := gin.Default()
@@ -25,9 +53,23 @@ func NewServer(store *sqlc.Store) *Server {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
-	//routes
 
-	//Accounts
+	server.accountRoutes(&router.RouterGroup)
+	server.userRoutes(&router.RouterGroup)
+	server.transferRoutes(&router.RouterGroup)
+	server.authRoutes(&router.RouterGroup)
+
+
+	server.router = router
+
+	return server, nil
+}
+
+
+
+
+
+func (server *Server) accountRoutes(router *gin.RouterGroup)  {
 	accounts := router.Group("/accounts")
 	{
 		accounts.GET("/", server.listAccounts )
@@ -36,25 +78,29 @@ func NewServer(store *sqlc.Store) *Server {
 		accounts.GET("/:id", server.getAccount)
 		accounts.DELETE("/:id", server.deleteAccount)
 	}
+}
 
-	//Accounts
-	transfer := router.Group("/transfer")
-	{
-		transfer.POST("/", server.transferAmount )
-	}
-
-
-	//Users
+func (server *Server) userRoutes(router *gin.RouterGroup)  {
 	user := router.Group("/users")
 	{
 		user.POST("/", server.createUser )
 		user.GET("/", server.listUsers )
 	}
+}
 
+func (server *Server) transferRoutes(router *gin.RouterGroup)  {
+	//Users
+	auth := router.Group("/auth")
+	{
+		auth.POST("/login", server.loginUser )
+	}
+}
 
-	server.router = router
-
-	return server
+func (server *Server) authRoutes(router *gin.RouterGroup)  {
+	transfer := router.Group("/transfer")
+	{
+		transfer.POST("/", server.transferAmount )
+	}
 }
 
 

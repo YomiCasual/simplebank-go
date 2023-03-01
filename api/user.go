@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"simplebank/db/sqlc"
 	lib "simplebank/libs"
@@ -19,6 +20,16 @@ type createUserRequest struct {
 	FullName string `json:"full_name" binding:"required"`
 	Email string `json:"email" binding:"required,email"`
 }
+type loginRequest struct {
+	UsernameEmail    string `json:"username_email" binding:"required" `
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+	User UserResponse `json:"user"`
+}
+
 type UserResponse struct {
 	ID                int64     `json:"id"`
 	Username          string    `json:"username"`
@@ -33,6 +44,17 @@ type listUserRequest struct {
 	PageSize    int32 `form:"pageSize" binding:"min=1"`
 }
 
+
+func newUserResponse (user sqlc.User) UserResponse {
+	return UserResponse{
+		Username: user.Username,
+		ID: user.ID,
+		Email: user.Email,
+		CreatedAt: user.CreatedAt,
+		FullName: user.FullName,
+		PasswordChangedAt: user.PasswordChangedAt,
+	}
+}
 
 
 
@@ -70,14 +92,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 	
-	newUser := UserResponse{
-		Username: user.Username,
-		ID: user.ID,
-		Email: user.Email,
-		CreatedAt: user.CreatedAt,
-		FullName: user.FullName,
-		PasswordChangedAt: user.PasswordChangedAt,
-	}
+	newUser := newUserResponse(user)
 
 	lib.HandleGinSuccess(ctx, newUser)
 }
@@ -110,6 +125,62 @@ func (server *Server) listUsers(ctx *gin.Context) {
 
 
 	lib.HandleGinSuccess(ctx, users)
+
+}
+
+
+
+func (server *Server) loginUser(ctx *gin.Context) {
+
+
+	var params loginRequest;
+	var user sqlc.User
+
+	
+	if err := ctx.ShouldBindJSON(&params); err != nil {
+		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+
+	user, err := server.store.GetUserByUsername(context.Background(), params.UsernameEmail)
+
+	if lib.HasError(err) {
+		
+		user, err = server.store.GetUserByEmail(context.Background(), params.UsernameEmail)
+
+		if lib.HasError(err) {
+			lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, errors.New("Invalid credentials"))
+			return 
+		}
+	}
+	
+	hasValidPassword := lib.PasswordCrypt().CheckPassword(user.HashedPassword, params.Password)
+
+	if (!hasValidPassword) {
+		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, errors.New("Invalid credentials"))
+		return 
+	}
+
+	token, err := server.tokenMaker.CreateToken(user.Username, int32(user.ID), server.config.AccessTokenDuration );
+
+
+	if lib.HasError(err) {
+		lib.HandleGinErrorWithStaus(ctx, http.StatusInternalServerError, err)
+		return 
+	}
+
+		
+	newUser := newUserResponse(user)
+
+
+	loginResponse := LoginResponse{
+		Token: token,
+		User: newUser,
+	}
+
+
+	lib.HandleGinSuccess(ctx, loginResponse)
 
 }
 

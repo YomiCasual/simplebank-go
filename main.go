@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 	"simplebank/api"
 	"simplebank/db/sqlc"
 	lib "simplebank/libs"
@@ -24,7 +26,12 @@ func main() {
 
 	lib.HandleError(err);
 	
-	server := api.NewServer(sqlc.NewStore(conn))
+	server, err := api.NewServer(config, sqlc.NewStore(conn))
+
+	if lib.HasError(err) {
+		fmt.Println("error from server", err)
+		log.Fatal("cannot get config")
+	}
 
 	err = server.Start(config.ServerAddress)
 
